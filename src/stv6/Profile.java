@@ -348,8 +348,7 @@ public class Profile implements Reloadable, Runnable {
 	
 	public void loadFromFile(File file) {
 		StringBuffer b = new StringBuffer();
-		try {
-			BufferedReader in = new BufferedReader(new FileReader(file));
+		try(BufferedReader in = new BufferedReader(new FileReader(file));){
 			String line = null;
 			while ((line = in.readLine()) != null) {
 				b.append(line);

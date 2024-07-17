@@ -100,8 +100,7 @@ public class UpnpManager extends AbstractManager {
             upnpPort = -1;
             
             // load port and local folders
-            try {
-                BufferedReader r = new BufferedReader(new FileReader(pmsConf));
+            try(BufferedReader r = new BufferedReader(new FileReader(pmsConf));) {
                 String line;
                 while ((line = r.readLine()) != null) {
                     if (line.startsWith("folders")) {

@@ -149,13 +149,14 @@ public class FileSystemManager extends AbstractManager implements EpisodeManager
             if (cfgFile.isFile()) {
                 // it's file; read line by line
                 ArrayList<String> folders = new ArrayList<String>();
-                try {
+                try(
                     BufferedReader reader = new BufferedReader(
                             new InputStreamReader(
                             new DataInputStream(
                                     new FileInputStream(cfgFile.getCanonicalFile())
                                     ))
-                            );
+                            );)
+                {
                     String line;
                     while ((line=reader.readLine()) != null)
                         folders.add(line);

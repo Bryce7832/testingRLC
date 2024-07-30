@@ -201,16 +201,16 @@ public class UpnpManager extends AbstractManager {
         return subpaths;
     }
 
-    private Document browsePage(String path) {
+    private Document browsePage(String path){
         try {
         	System.out.println("[debug:UpnpManager] " + broadIp + ":" + upnpPort + " -- " + path);
-            HttpRequestor r = HttpRequestor.post("http://" + 
+            HttpRequestor r = HttpRequestor.post("http://" +
                     broadIp + CONTENT_PATH, upnpPort);
             Request req = r.getRequest();
             req.setHeader("SOAPAction", BROWSE_ACTION);
             req.setHeader("User-Agent", "SeriesTracker");
             req.setHeader("Content-Type", "text/xml; charset=\"utf-8\"");
-            
+
             StringBuilder body = new StringBuilder();
             body.append("<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope\"");
             body.append(" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding\">");
@@ -224,25 +224,28 @@ public class UpnpManager extends AbstractManager {
             body.append("</s:Body>");
             body.append("</s:Envelope>");
             req.setBody(body);
-            
-            Response resp = r.request();
-            if (!"200 OK".equals(resp.getStatus())) {
-                // TODO
-                return null;
+            try {
+                Response resp = r.request();
+                if (!"200 OK".equals(resp.getStatus())) {
+                    // TODO
+                    r.close();
+                    return null;
+                }
+
+                Matcher m = RESULT_PATTERN.matcher(resp.getBody());
+                if (!m.find()) {
+                    // TODO
+                    r.close();
+                    return null;
+                }
+                r.close();
+                String result = m.group(1);
+                DOMParser parser = new DOMParser();
+                parser.parse(new InputSource(new StringReader(result.replaceAll("&lt;", "<").replaceAll("&gt;", ">"))));
+                return parser.getDocument();
+            }catch(IOException e){
+                r.close();
             }
-            
-            Matcher m = RESULT_PATTERN.matcher(resp.getBody());
-            if (!m.find()) {
-                // TODO
-                return null;
-            }
-                
-            String result = m.group(1);
-            DOMParser parser = new DOMParser();
-            parser.parse(new InputSource(new StringReader(
-                    result.replaceAll("&lt;", "<").replaceAll("&gt;", ">"))));
-            return parser.getDocument();
-            
         } catch (UnknownHostException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -253,7 +256,6 @@ public class UpnpManager extends AbstractManager {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        
         return null;
     }
     

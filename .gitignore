@@ -9,3 +9,7 @@ script.sh
 testOSP.iml
 
 /classes
+
+wpi-out/
+
+wpi-iterations/

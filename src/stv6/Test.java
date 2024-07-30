@@ -46,6 +46,7 @@ public class Test {
 				}
 				
 			});
+			req.close();
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

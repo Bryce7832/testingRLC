@@ -51,6 +51,7 @@ public class UserSelectHandler implements RequestHandler {
 			} catch (NumberFormatException e) {
 				t.putVariable("body", "Illegal user selection...");
 				t.writeTo(resp);
+				t.close();
 				return true;
 			}
 			
@@ -71,6 +72,7 @@ public class UserSelectHandler implements RequestHandler {
 		}
 		
 		t.writeTo(resp);
+		t.close();
 		return true;
 	}
 

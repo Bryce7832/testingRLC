@@ -29,9 +29,11 @@ public class IncludeHandler extends AbstractHandler implements TemplateCodeHandl
                     incFile.getAbsolutePath());
             return;
         }
-        
+
         TemplateReader incTemp = new TemplateReader(incFile);
         Template.doTemplateLoop(incTemp, env, out);
+        incTemp.close();
+
     }
 
 }

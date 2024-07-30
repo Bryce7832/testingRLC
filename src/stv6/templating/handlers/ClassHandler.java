@@ -1,5 +1,6 @@
 package stv6.templating.handlers;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -35,12 +36,14 @@ public class ClassHandler extends AbstractHandler implements TemplateCodeHandler
 		// read in the class
 		ClassReader rdr = new ClassReader();			
 		while (true) {
-			line = tpl.next();
-			
-			if (line == null || (isCodeLine(line) && getCmd(line).equals("endclass")))
-				break;
-			
-			rdr.add( line.toString() );
+			try {
+				line = tpl.next();
+				rdr.add(line.toString());
+			}catch(EOFException e) {
+				if (line == null || (isCodeLine(line) && getCmd(line).equals("endclass")))
+					break;
+			}
+			rdr.close();
 		}
 		
 		// format and print objects!
@@ -53,6 +56,7 @@ public class ClassHandler extends AbstractHandler implements TemplateCodeHandler
 			oenv.setValue("INDEX", String.valueOf(i++));			
 			Template.doTemplateLoop(rdr, oenv, out);
 		}
+		rdr.close();
 	}
 	
 	private static class ClassReader extends TemplateReader {
@@ -60,6 +64,7 @@ public class ClassHandler extends AbstractHandler implements TemplateCodeHandler
 		private Iterator<String> iter = null;
 		
 		private ClassReader() {
+			super();
 			lines = new LinkedList<String>();
 		}
 		

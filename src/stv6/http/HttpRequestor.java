@@ -3,15 +3,22 @@ package stv6.http;
 import java.io.IOException;
 import java.net.UnknownHostException;
 
+import org.checkerframework.checker.calledmethods.qual.EnsuresCalledMethods;
+import org.checkerframework.checker.mustcall.qual.InheritableMustCall;
+import org.checkerframework.checker.mustcall.qual.MustCallAlias;
+import org.checkerframework.checker.mustcall.qual.NotOwning;
+import org.checkerframework.checker.mustcall.qual.Owning;
 import stv6.http.request.Request;
 import stv6.http.request.Response;
 
+@InheritableMustCall({"close"})
 public class HttpRequestor implements Runnable {
+	@Owning
 	private final HttpSocket skt;
 	private final Request r;
 	private HttpResponseCallback cb;
-	
-	private HttpRequestor(Request r, HttpSocket skt) {
+
+	private HttpRequestor(Request r, @Owning HttpSocket skt) {
 		this.skt = skt;
 		this.r = r;
 	}
@@ -58,14 +65,14 @@ public class HttpRequestor implements Runnable {
 			cb.callback( null );
 		}
 	}
-	
+
 	private static HttpRequestor createFor(String url, String method, int port) 
 			throws UnknownHostException, IOException {
 		if (!url.startsWith("http://")) {
 			// unsupported protocol
 			return null;
 		}
-		
+
 		String server, path;
 		int pos = url.indexOf('/', 8);
 		if (pos < 0) {
@@ -75,12 +82,11 @@ public class HttpRequestor implements Runnable {
 			server = url.substring(7, pos);
 			path = url.substring(pos);
 		}
-		
-		
+
+
 		HttpSocket skt = new HttpSocket(server, port);
 		Request r = new Request(method, path, skt);
-		
-		return new HttpRequestor(r, skt);
+        return new HttpRequestor(r, skt);
 	}
 	
 	public static HttpRequestor get(String url) throws UnknownHostException, IOException {
@@ -98,4 +104,10 @@ public class HttpRequestor implements Runnable {
 	public static HttpRequestor post(String url, int port) throws UnknownHostException, IOException {
 		return createFor(url, "POST", port);
 	}
+
+	@EnsuresCalledMethods(value = {"this.skt"} , methods = {"close"})
+	public void close(){
+        skt.close();
+    }
 }
+//

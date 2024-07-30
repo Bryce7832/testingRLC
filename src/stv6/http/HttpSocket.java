@@ -9,22 +9,32 @@ import java.net.Socket;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
 
+import org.checkerframework.checker.calledmethods.qual.EnsuresCalledMethods;
+import org.checkerframework.checker.index.qual.IndexFor;
+import org.checkerframework.checker.mustcall.qual.InheritableMustCall;
+import org.checkerframework.checker.mustcall.qual.MustCall;
+import org.checkerframework.checker.mustcall.qual.Owning;
 import stv6.http.request.Request;
 
+@InheritableMustCall({"close"})
 public class HttpSocket {
 	
-	private Socket skt;
-	private BufferedReader input;
-	private PrintWriter output;
+	private @Owning final Socket skt;
+	private @Owning final BufferedReader input;
+	private @Owning final PrintWriter output;
 
-	public HttpSocket(Socket s) {
+	public HttpSocket(@Owning Socket s) {
 		skt = s;
+		BufferedReader tempInput = null;
+		PrintWriter tempOutput = null;
 		try
 		{
-			input = new BufferedReader (
+			tempInput = new BufferedReader (
 				new InputStreamReader( skt.getInputStream() ));
-			output = new PrintWriter( skt.getOutputStream(), true );
+			tempOutput = new PrintWriter( skt.getOutputStream(), true );
 		} catch (IOException e) {}
+		this.input = tempInput;
+		this.output = tempOutput;
 	}
 	
 	public HttpSocket(String host, int port) throws UnknownHostException, IOException {
@@ -102,13 +112,20 @@ public class HttpSocket {
 		
 		return true;
 	}
-
-	public void close() {
-		try {
+@EnsuresCalledMethods(value = {"this.skt", "this.input", "this.output"} , methods = "close")
+public void close() {
+		try{
 			skt.close();
-			input.close();
-			output.close();
-		} catch (IOException e) {}
+		}catch (IOException e){}
+		finally{
+			try{
+				input.close();
+			}catch (IOException e){}
+			finally {
+				output.close();
+			}
+		}
+
 	}
 	
 	public static String encode(String raw) {

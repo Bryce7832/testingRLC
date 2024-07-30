@@ -64,6 +64,7 @@ public class SyncTrackHandler {
 				
 				if (vars.isSet("error")) {
 					System.err.println("\nTRACK: " + vars.getValue("error"));
+					rq.close();
 					return;
 				}
 				
@@ -75,6 +76,7 @@ public class SyncTrackHandler {
 						System.err.println("\nTRACK: Invalid server response (incomplete)");
 						System.err.println("Full response: " + r.getBody());
 					}
+					rq.close();
 					return;
 				}
 
@@ -105,6 +107,7 @@ public class SyncTrackHandler {
 				Profile.getInstance().updateSyncTime(SyncPage.TRACK);
 			}
 			
-		}); 
+		});
+		rq.close();
 	}
 }

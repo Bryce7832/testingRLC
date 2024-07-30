@@ -48,55 +48,63 @@ public class SyncNewHandler {
 	
 	public static boolean handle(SyncSettings settings) throws UnknownHostException, IOException {
 		HttpRequestor rq = settings.getRequestorFor(SyncPage.NEW);
-		Request r = rq.getRequest();
-		buildRequest(settings, r);
-		
-		// only actually request if necessary
-		int minSize = settings.isUsingPassword() ? 1 : 0;
-		if (r.getPostVars().size() > minSize) {
-			Response resp = rq.request();
-			VariableList vars = new VariableList();
-			Request.parseUrlEncodedVars(resp.getBody(), vars);
-			// TODO consider users exists error w/ --join option 
-			if (vars.isSet("error")) {
-				// go ahead and stop everything... this is probably
-				// a client-side input error
-				StaticMessageHandler.getInstance().setBody(
-						"Synchronization returned the following error: " +
-						vars.getValue("error")
-				);
-				StaticMessageHandler.getInstance().setRefresh(null);
-				return false;
-			}			
-			
-			// success! do what the server tells us ;)
-			if (vars.isSet("uo")) {
-				// update user ids
-				ListVariable oldIds = (ListVariable) vars.get("uo");
-				ListVariable newIds = (ListVariable) vars.get("un");
-				if (oldIds.size() != newIds.size()) {
-					System.out.println("Failed: user id count mismatch] ");
-					return true;
+		try {
+			Request r = rq.getRequest();
+			buildRequest(settings, r);
+
+			// only actually request if necessary
+			int minSize = settings.isUsingPassword() ? 1 : 0;
+			if (r.getPostVars().size() > minSize) {
+				Response resp = rq.request();
+				VariableList vars = new VariableList();
+				Request.parseUrlEncodedVars(resp.getBody(), vars);
+				// TODO consider users exists error w/ --join option
+				if (vars.isSet("error")) {
+					// go ahead and stop everything... this is probably
+					// a client-side input error
+					StaticMessageHandler.getInstance().setBody(
+							"Synchronization returned the following error: " +
+									vars.getValue("error")
+					);
+					StaticMessageHandler.getInstance().setRefresh(null);
+					rq.close();
+					return false;
 				}
-				// build the correct data type				
-				Profile.getInstance().updateUserIds( buildIdDataList(oldIds, newIds) );
-			}
-			
-			if (vars.isSet("so")) {
-				// update series ids
-				ListVariable oldIds = (ListVariable) vars.get("so");
-				ListVariable newIds = (ListVariable) vars.get("sn");
-				if (oldIds.size() != newIds.size()) {
-					System.out.println("Failed: series id count mismatch] ");
-					return true;
+
+				// success! do what the server tells us ;)
+				if (vars.isSet("uo")) {
+					// update user ids
+					ListVariable oldIds = (ListVariable) vars.get("uo");
+					ListVariable newIds = (ListVariable) vars.get("un");
+					if (oldIds.size() != newIds.size()) {
+						System.out.println("Failed: user id count mismatch] ");
+						rq.close();
+						return true;
+					}
+					// build the correct data type
+					Profile.getInstance().updateUserIds(buildIdDataList(oldIds, newIds));
 				}
-				Profile.getInstance().updateSeriesIds( buildIdDataList(oldIds, newIds) );
+
+				if (vars.isSet("so")) {
+					// update series ids
+					ListVariable oldIds = (ListVariable) vars.get("so");
+					ListVariable newIds = (ListVariable) vars.get("sn");
+					if (oldIds.size() != newIds.size()) {
+						System.out.println("Failed: series id count mismatch] ");
+						rq.close();
+						return true;
+					}
+					Profile.getInstance().updateSeriesIds(buildIdDataList(oldIds, newIds));
+				}
 			}
+
+			// we successfully sync'd; save the date
+			Profile.getInstance().updateSyncTime(SyncPage.NEW);
+			rq.close();
+		} catch (IOException e) {
+			rq.close();
+			return false;
 		}
-		
-		// we successfully sync'd; save the date
-		Profile.getInstance().updateSyncTime(SyncPage.NEW);
-		
 		return true;
 	}
 

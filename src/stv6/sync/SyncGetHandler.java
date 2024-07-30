@@ -47,6 +47,7 @@ public class SyncGetHandler {
 					ListVariable names = (ListVariable) vars.get("n");
 					if (ids.size() != names.size()) {
 						System.err.println("\nGET: Invalid server response (data length mismatch)");
+						rq.close();
 						return;
 					}
 					
@@ -60,6 +61,7 @@ public class SyncGetHandler {
 				Profile.getInstance().createNewSeries(toCreate);
 			}			
 		});
+		rq.close();
 	}
 
 }

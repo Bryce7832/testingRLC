@@ -1,5 +1,9 @@
 package stv6.templating;
 
+import org.checkerframework.checker.calledmethods.qual.EnsuresCalledMethods;
+import org.checkerframework.checker.mustcall.qual.InheritableMustCall;
+import org.checkerframework.checker.mustcall.qual.Owning;
+
 import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.File;
@@ -7,22 +11,24 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
+@InheritableMustCall({"close"})
 public class TemplateReader {
-    private File sourceFile;
-	private BufferedReader file;
+    private  File sourceFile;
+	@Owning
+	private final BufferedReader file;
 	private StringBuilder lastLine = null;
 	private boolean useLast = false;
 	
 	/** 
 	 * For extending this class to not use the filesystem
 	 */
-	protected TemplateReader() {}
-	
+	protected TemplateReader(){
+		file = null;
+	}
+
 	public TemplateReader(File source) throws FileNotFoundException {
 	    sourceFile = source;
-		file = new BufferedReader(
-			new FileReader(source)
-		);
+		file = new BufferedReader(new FileReader(source));
 	}
 	
 	/**
@@ -81,4 +87,10 @@ public class TemplateReader {
 		}
 	}
 
+	@EnsuresCalledMethods(value = "file", methods = "close")
+	public void close() {
+		try{
+            file.close();
+		} catch (IOException e) {}
+    }
 }

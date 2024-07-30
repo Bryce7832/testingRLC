@@ -5,6 +5,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import org.checkerframework.checker.calledmethods.qual.EnsuresCalledMethods;
+import org.checkerframework.checker.mustcall.qual.InheritableMustCall;
+import org.checkerframework.checker.mustcall.qual.Owning;
 import stv6.http.request.variables.Variable;
 import stv6.http.request.variables.VariableList;
 import stv6.templating.environment.Environment;
@@ -16,16 +19,19 @@ public class Templator {
 	public Templator() {
 		
 	}
-	
+
 	public Template newTemplate(String path) throws FileNotFoundException {
+
 		return new Template( new File(path) );
 	}
-		
+
+	@InheritableMustCall({"close"})
 	public static class Template {
-		private TemplateReader file;
+		@Owning
+		private final TemplateReader file;
 		
-		private ObjectManager objects;
-		private VariableList globalVars;
+		private final ObjectManager objects;
+		private final VariableList globalVars;
 		
 		private Template(File source) throws FileNotFoundException {
 			objects = new ObjectManager();
@@ -79,5 +85,10 @@ public class Templator {
 				} 
 			}
 		}
+
+		@EnsuresCalledMethods(value = {"file"} , methods = {"close"})
+		public void close(){
+            file.close();
+        }
 	}
 }

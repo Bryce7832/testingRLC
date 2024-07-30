@@ -37,7 +37,8 @@ public abstract class AbstractHandler implements RequestHandler {
 		boolean handledResult = wrappedHandle(r, t);
 		if (handledResult)
 			t.writeTo(resp);
-		
+
+		t.close();
 		return handledResult;
 	}
 	
